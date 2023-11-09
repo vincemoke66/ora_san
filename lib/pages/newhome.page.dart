@@ -62,8 +62,8 @@ class _NewHomePageState extends State<NewHomePage> {
                   Container(
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: Transform(
-                        transform: Matrix4.rotationZ(0.2),
+                      child: Transform.rotate(
+                        angle: 3 * math.pi / 2,
                         child: CustomPaint(
                           painter: YourCustomPainter(
                             startAngleInDegrees: -90,
