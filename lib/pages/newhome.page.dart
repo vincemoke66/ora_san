@@ -12,7 +12,7 @@ class NewHomePage extends StatefulWidget {
 }
 
 class _NewHomePageState extends State<NewHomePage> {
-  double angle = 1.0;
+  double angle = 15 * 360 / 60;
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +181,10 @@ class PomoClockCustomPainter extends CustomPainter {
     // painting the gradient circle
     final gradient = ui.Gradient.sweep(
       center,
-      [Colors.blue, Colors.blue.withOpacity(0.3)],
+      [
+        Colors.blue.shade700.withOpacity(mapValues(angle, 0.5, 1.0)),
+        Colors.blue.withOpacity(mapValues(angle, 0.0, 0.4)),
+      ],
       [0, 1],
       TileMode.clamp,
       startAngle,
@@ -215,7 +218,7 @@ class PomoClockCustomPainter extends CustomPainter {
           ),
         ),
       Colors.black45,
-      4.0,
+      8.0,
       true,
     );
 
@@ -236,7 +239,7 @@ class PomoClockCustomPainter extends CustomPainter {
       Offset(hourHandX, hourHandY),
       Paint()
         ..color = Colors.blue.shade800
-        ..strokeWidth = 8
+        ..strokeWidth = size.width / 50
         ..strokeCap = StrokeCap.round,
     );
 
@@ -246,7 +249,7 @@ class PomoClockCustomPainter extends CustomPainter {
         ..addOval(
           Rect.fromCircle(
             center: center,
-            radius: size.width * 0.03,
+            radius: size.width * 0.035,
           ),
         ),
       Colors.black,
@@ -255,11 +258,29 @@ class PomoClockCustomPainter extends CustomPainter {
     );
 
     // painting outer holder
-    canvas.drawCircle(center, size.width * 0.03, Paint()..color = Colors.white);
+    canvas.drawCircle(
+        center, size.width * 0.035, Paint()..color = Colors.white);
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return false;
   }
+}
+
+double mapValues(double inputValue, double min, double max) {
+  int minValue = 0;
+  int maxValue = 360;
+  List<double> outputRange = [min, max];
+
+  // Ensure the input is within the specified range
+  inputValue = inputValue.clamp(minValue, maxValue).toDouble();
+
+  // Map the input value to the output range
+  double mappedValue = (inputValue - minValue) /
+          (maxValue - minValue) *
+          (outputRange[1] - outputRange[0]) +
+      outputRange[0];
+
+  return mappedValue;
 }
