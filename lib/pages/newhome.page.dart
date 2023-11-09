@@ -12,6 +12,8 @@ class NewHomePage extends StatefulWidget {
 }
 
 class _NewHomePageState extends State<NewHomePage> {
+  double angle = 1.0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,10 +66,19 @@ class _NewHomePageState extends State<NewHomePage> {
                       aspectRatio: 1,
                       child: Transform.rotate(
                         angle: 3 * math.pi / 2,
-                        child: CustomPaint(
-                          painter: YourCustomPainter(
-                            startAngleInDegrees: -90,
-                            sweepPercentage: 0.75,
+                        child: GestureDetector(
+                          onPanUpdate: (details) {
+                            double futureAngle = angle + details.delta.dy;
+                            if (futureAngle < 360 && futureAngle > 0) {
+                              setState(() {
+                                angle += details.delta.dy;
+                              });
+                            }
+                          },
+                          child: CustomPaint(
+                            painter: PomoClockCustomPainter(
+                              angle: angle,
+                            ),
                           ),
                         ),
                       ),
@@ -118,136 +129,6 @@ class _NewHomePageState extends State<NewHomePage> {
   }
 }
 
-class PomoClock extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    var gap = 0.2;
-    var backContainerRadius = size.width * gap;
-    var innerHolderRadius = backContainerRadius * gap;
-    var outerHolderRadius = innerHolderRadius - (innerHolderRadius * 0.3);
-
-    var centerX = size.width / 2;
-    var centerY = size.height / 2;
-    var center = Offset(centerX, centerY);
-
-    var backCircleFill = Paint()..color = Color(0xFFF0D7D8);
-    var innerHolderFill = Paint()..color = Color(0xFFFFF3EB);
-    var outerHolderFill = Paint()..color = Color(0xFFFFFFFF);
-
-    // painting back container
-    canvas.drawCircle(center, backContainerRadius, backCircleFill);
-
-    // painting container filler
-    // var containerFillerFill = Paint()
-    //   ..shader = RadialGradient(colors: [Color(0xFFCB5955), Color(0xFFF0D7D8)])
-    //       .createShader(
-    //           Rect.fromCircle(center: center, radius: backContainerRadius));
-    // final containerFillerFill = RadialGradient(
-    //   colors: [Colors.blue, Colors.green], // Adjust these colors as needed
-    //   stops: [0.0, 1.0],
-    //   center: Alignment(
-    //       -math.cos((-90 * (math.pi / 180))), -math.sin((2 * math.pi * 0.75))),
-    //   radius: 1.0,
-    // );
-    // ..style = PaintingStyle.stroke
-    // ..strokeCap = StrokeCap.round
-    // ..strokeWidth = 8;
-
-    // canvas.drawArc(
-    //   Rect.fromCircle(center: center, radius: backContainerRadius),
-    //   (-90 * (math.pi / 180)),
-    //   (2 * math.pi * 0.75),
-    //   true,
-    //   containerFillerFill,
-    //   // Paint()..color = Colors.blue // TODO change color to gradient
-    // );
-
-    // Convert degrees to radians for the start angle
-    final startAngle = -90 * (math.pi / 180);
-
-    // Convert percentage to radians for the sweep angle
-    final sweepAngle = 2 * math.pi * 0.75;
-
-    var radius = size.width * 0.2;
-
-    // Create a sweep gradient that follows the arc
-    final gradient = ui.Gradient.sweep(
-      center,
-      [
-        Colors.amber,
-        Colors.amber.withOpacity(0.1)
-      ], // Adjust these colors and opacities as needed
-      [0.0, 1.0],
-      TileMode.clamp,
-      startAngle,
-      startAngle + sweepAngle,
-    );
-
-    // Use ShaderMask to apply the gradient to the drawArc
-    canvas.saveLayer(
-      Rect.fromCircle(center: center, radius: radius),
-      Paint(),
-    );
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      true,
-      Paint(),
-    );
-
-    final maskPaint = Paint()..shader = gradient;
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      startAngle,
-      sweepAngle,
-      true,
-      maskPaint,
-    );
-    canvas.restore();
-
-    // inner holder shadow
-    canvas.drawShadow(
-      Path()
-        ..addOval(Rect.fromCircle(center: center, radius: innerHolderRadius)),
-      Colors.black,
-      3.0, // Shadow elevation
-      true, // Whether to include the shape in the shadow calculation
-    );
-
-    // painting hour hand
-    var hourHandBrush = Paint()
-      ..shader = RadialGradient(colors: [Color(0xFFEA74AB), Color(0xFFC279FB)])
-          .createShader(
-              Rect.fromCircle(center: center, radius: size.width * 0.1))
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 8;
-
-    canvas.drawLine(center, Offset(centerX, size.width * 0.2), hourHandBrush);
-
-    // painting inner holder
-    canvas.drawCircle(center, innerHolderRadius, innerHolderFill);
-
-    // painting outer holder shadow
-    canvas.drawShadow(
-      Path()
-        ..addOval(Rect.fromCircle(center: center, radius: outerHolderRadius)),
-      Colors.black,
-      3.0, // Shadow elevation
-      true, // Whether to include the shape in the shadow calculation
-    );
-
-    // painting outer holder
-    canvas.drawCircle(center, outerHolderRadius, outerHolderFill);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
-  }
-}
-
 class PomoIndicator extends StatelessWidget {
   const PomoIndicator({
     super.key,
@@ -269,12 +150,12 @@ class PomoIndicator extends StatelessWidget {
   }
 }
 
-class YourCustomPainter extends CustomPainter {
-  final double sweepPercentage; // Value between 0.0 and 1.0
-  final double startAngleInDegrees; // Value in degrees
+class PomoClockCustomPainter extends CustomPainter {
+  final double angle;
 
-  YourCustomPainter(
-      {required this.sweepPercentage, required this.startAngleInDegrees});
+  PomoClockCustomPainter({
+    required this.angle,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -285,19 +166,22 @@ class YourCustomPainter extends CustomPainter {
     final radius = size.width / 4;
 
     // Convert degrees to radians for the start angle
-    final startAngle = 0.0;
+    const startAngle = 0.0;
 
     // Convert percentage to radians for the sweep angle
-    final sweepAngle = 3 * math.pi / 2;
+    final sweepAngle = angle * math.pi / 180;
 
-    // Calculate normalized start and end angles for the gradient
-    final normalizedStartAngle = startAngle / (2 * math.pi);
-    final normalizedEndAngle = (startAngle + sweepAngle) / (2 * math.pi);
+    // painting farthest circle
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()..color = Color(0xFFBBDEFB).withOpacity(0.4),
+    );
 
-    // Create a sweep gradient that follows the arc
+    // painting the gradient circle
     final gradient = ui.Gradient.sweep(
       center,
-      [Colors.blue, Colors.blue.withOpacity(0.2)],
+      [Colors.blue, Colors.blue.withOpacity(0.3)],
       [0, 1],
       TileMode.clamp,
       startAngle,
@@ -320,6 +204,58 @@ class YourCustomPainter extends CustomPainter {
       maskPaint,
     );
     canvas.restore();
+
+    // painting inner holder shadow
+    canvas.drawShadow(
+      Path()
+        ..addOval(
+          Rect.fromCircle(
+            center: center,
+            radius: size.width * 0.05,
+          ),
+        ),
+      Colors.black45,
+      4.0,
+      true,
+    );
+
+    // painting inner holder
+    canvas.drawCircle(
+        center, size.width * 0.05, Paint()..color = Colors.blue.shade100);
+
+    double angleInRadians = angle * math.pi / 180;
+
+    // painting the hour hand
+    // TODO fix the rotation when cursor is panning
+    double hourHandLength = size.width * 0.4;
+    double hourHandX = center.dx + hourHandLength * math.cos(angleInRadians);
+    double hourHandY = center.dy + hourHandLength * math.sin(angleInRadians);
+
+    canvas.drawLine(
+      center,
+      Offset(hourHandX, hourHandY),
+      Paint()
+        ..color = Colors.blue.shade800
+        ..strokeWidth = 8
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // painting outer holder shadow
+    canvas.drawShadow(
+      Path()
+        ..addOval(
+          Rect.fromCircle(
+            center: center,
+            radius: size.width * 0.03,
+          ),
+        ),
+      Colors.black,
+      3.0, // Shadow elevation
+      true, // Whether to include the shape in the shadow calculation
+    );
+
+    // painting outer holder
+    canvas.drawCircle(center, size.width * 0.03, Paint()..color = Colors.white);
   }
 
   @override
