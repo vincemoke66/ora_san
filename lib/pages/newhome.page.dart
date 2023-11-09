@@ -171,6 +171,44 @@ class PomoClockCustomPainter extends CustomPainter {
     // Convert percentage to radians for the sweep angle
     final sweepAngle = angle * math.pi / 180;
 
+    // painting outer strokes
+    var outerRadius = size.width / 2.5;
+    var innerRadius = size.width / 2.5 * 0.9;
+    var outerRadiusSmall = size.width / 2.55;
+    var innerRadiusSmall = size.width / 2.5 * 0.95;
+
+    // small outer strokes
+    for (var i = 0; i < 360; i += 6) {
+      var x1 = center.dx + outerRadiusSmall * math.cos(i * math.pi / 180);
+      var y1 = center.dy + outerRadiusSmall * math.sin(i * math.pi / 180);
+
+      var x2 = center.dx + innerRadiusSmall * math.cos(i * math.pi / 180);
+      var y2 = center.dy + innerRadiusSmall * math.sin(i * math.pi / 180);
+      canvas.drawLine(
+          Offset(x1, y1),
+          Offset(x2, y2),
+          Paint()
+            ..color = Colors.blueGrey.shade100
+            ..strokeWidth = size.width / 150
+            ..strokeCap = StrokeCap.round);
+    }
+
+    // large outer strokes
+    for (var i = 0; i < 360; i += 30) {
+      var x1 = center.dx + outerRadius * math.cos(i * math.pi / 180);
+      var y1 = center.dy + outerRadius * math.sin(i * math.pi / 180);
+
+      var x2 = center.dx + innerRadius * math.cos(i * math.pi / 180);
+      var y2 = center.dy + innerRadius * math.sin(i * math.pi / 180);
+      canvas.drawLine(
+          Offset(x1, y1),
+          Offset(x2, y2),
+          Paint()
+            ..color = Colors.blueGrey
+            ..strokeWidth = size.width / 150
+            ..strokeCap = StrokeCap.round);
+    }
+
     // painting farthest circle
     canvas.drawCircle(
       center,
@@ -230,10 +268,25 @@ class PomoClockCustomPainter extends CustomPainter {
 
     // painting the hour hand
     // TODO fix the rotation when cursor is panning
-    double hourHandLength = size.width * 0.4;
+    double hourHandLength = size.width * 0.37;
     double hourHandX = center.dx + hourHandLength * math.cos(angleInRadians);
     double hourHandY = center.dy + hourHandLength * math.sin(angleInRadians);
 
+    Path hourHandShadowPath = Path();
+    hourHandShadowPath.moveTo(center.dx, center.dy);
+    hourHandShadowPath.lineTo(hourHandX, hourHandY);
+
+    // painting our hand shadow
+    canvas.drawPath(
+      hourHandShadowPath,
+      Paint()
+        ..color = Colors.blue.withOpacity(1)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size.width / 40
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10),
+    );
+
+    // painting hour hand without shadow
     canvas.drawLine(
       center,
       Offset(hourHandX, hourHandY),
